@@ -61,7 +61,7 @@ class SubdomainTenantFinderTest extends TestCase
     {
         $excludedSubdomains = [
             'www',
-            'excluded-domain'
+            'excluded-domain',
         ];
 
         config(['multitenancy.excluded_domains' => $excludedSubdomains]);
