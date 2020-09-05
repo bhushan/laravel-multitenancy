@@ -1,10 +1,13 @@
 <?php declare(strict_types=1);
 
 use Enlight\Multitenancy\Models\Tenant;
+use Enlight\Multitenancy\Tasks\PrefixCacheTask;
 use Enlight\Multitenancy\Actions\MigrateTenantAction;
+use Enlight\Multitenancy\Tasks\SwitchTenantDatabaseTask;
 use Enlight\Multitenancy\Actions\MakeTenantCurrentAction;
 use Enlight\Multitenancy\Actions\ForgetCurrentTenantAction;
 use Enlight\Multitenancy\Actions\MakeQueueTenantAwareAction;
+use Enlight\Multitenancy\TenantFinder\SubdomainOrDomainTenantFinder;
 
 return [
     /*
@@ -14,7 +17,7 @@ return [
      * This class should extend `Enlight\Multitenancy\TenantFinder\TenantFinder`
      *
      */
-    'tenant_finder' => null,
+    'tenant_finder' => SubdomainOrDomainTenantFinder::class,
 
     /*
      * These fields are used by tenant:artisan command to match one or more tenant
@@ -29,7 +32,8 @@ return [
      * A valid task is any class that implements Enlight\Multitenancy\Tasks\SwitchTenantTask
      */
     'switch_tenant_tasks' => [
-        // add tasks here
+        PrefixCacheTask::class,
+        SwitchTenantDatabaseTask::class,
     ],
 
     /*
@@ -56,7 +60,7 @@ return [
     /*
      * The connection name to reach the landlord database
      */
-    'landlord_database_connection_name' => null,
+    'landlord_database_connection_name' => 'landlord',
 
     /*
      * This key will be used to bind the current tenant in the container.
@@ -78,7 +82,7 @@ return [
      * You can exclude any subdomains pointing to our application.
      */
     'excluded_subdomains' => [
-        'www'
+        'www',
     ],
 
     /*
@@ -92,5 +96,5 @@ return [
      * https://www.enlight.host <-- should not be like this
      * https://anysubdomain.enlight.host <-- should not be like this
      */
-    'landlord_url' => env('LANDLORD_URL', 'landlord.domain'),
+    'landlord_url' => env('LANDLORD_URL', 'landlord.test'),
 ];

@@ -7,7 +7,7 @@ use Enlight\Multitenancy\Models\Tenant;
 use Enlight\Multitenancy\Models\Concerns\UsesTenantModel;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class SubdomainTenantFinder extends TenantFinder
+class SubdomainOrDomainTenantFinder extends TenantFinder
 {
     use UsesTenantModel;
 
@@ -22,21 +22,24 @@ class SubdomainTenantFinder extends TenantFinder
         $host = $request->getHost();
         $this->hostChunks = explode('.', $host);
 
-        return $this
-            ->insureSubdomainAvailable()
-            ->findSubdomain()
-            ->insureLandlordRequest()
-            ->insureSubdomainNotExcluded()
-            ->getTenantModel()::whereSubdomain($this->subdomain)->first();
-    }
-
-    private function insureSubdomainAvailable(): self
-    {
-        if (count($this->hostChunks) === 2) {
-            throw new NotFoundHttpException('Not Prepared to handle it right now');
+        if (! $this->subdomainAvailable()) {
+            return $this->getTenantModel()::whereDomain($host)->first();
         }
 
-        return $this;
+        $this->findSubdomain()->insureLandlordRequest();
+
+        if ($this->excludedSubdomain()) {
+            // www.google.com/register to google.com/register
+            throw new NotFoundHttpException('Not Prepared to handle it right now');
+            // return null;
+        }
+
+        return $this->getTenantModel()::whereSubdomain($this->subdomain)->first();
+    }
+
+    private function subdomainAvailable(): bool
+    {
+        return count($this->hostChunks) === 3;
     }
 
     private function findSubdomain(): self
@@ -57,15 +60,8 @@ class SubdomainTenantFinder extends TenantFinder
         return $this;
     }
 
-    private function insureSubdomainNotExcluded(): self
+    private function excludedSubdomain(): bool
     {
-        if (in_array($this->subdomain, config('multitenancy.excluded_subdomains'))) {
-            // it should redirect to the request url because
-            // ex. www is excluded domain and we have landlord domain google.com
-            // then www.google.com/register should be redirected to google.com/register
-            throw new NotFoundHttpException('Not Prepared to handle it right now');
-        }
-
-        return $this;
+        return in_array($this->subdomain, config('multitenancy.excluded_subdomains'));
     }
 }

@@ -5,28 +5,28 @@ namespace Enlight\Multitenancy\Tests\Feature\TenantFinder;
 use Illuminate\Http\Request;
 use Enlight\Multitenancy\Models\Tenant;
 use Enlight\Multitenancy\Tests\TestCase;
-use Enlight\Multitenancy\TenantFinder\SubdomainTenantFinder;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Enlight\Multitenancy\TenantFinder\SubdomainOrDomainTenantFinder;
 
 class SubdomainTenantFinderTest extends TestCase
 {
-    private SubdomainTenantFinder $tenantFinder;
+    private SubdomainOrDomainTenantFinder $tenantFinder;
 
     public function setUp(): void
     {
         parent::setUp();
 
-        $this->tenantFinder = new SubdomainTenantFinder();
+        $this->tenantFinder = new SubdomainOrDomainTenantFinder();
     }
 
     /** @test */
-    public function it_throws_exception_if_request_doesnt_have_subdomain()
+    public function it_finds_tenant_based_on_domain_when_subdomain_not_available()
     {
-        $this->expectException(NotFoundHttpException::class);
+        $tenant = factory(Tenant::class)->create(['domain' => 'my-domain.com']);
 
-        $request = Request::create('https://landlord.domain');
+        $request = Request::create('https://my-domain.com');
 
-        $this->tenantFinder->findForRequest($request)->id;
+        $this->assertEquals($tenant->id, $this->tenantFinder->findForRequest($request)->id);
     }
 
     /** @test */
@@ -34,15 +34,15 @@ class SubdomainTenantFinderTest extends TestCase
     {
         $tenant = factory(Tenant::class)->create(['subdomain' => 'any-subdomain']);
 
-        $request = Request::create('https://any-subdomain.landlord.domain');
+        $request = Request::create('https://any-subdomain.landlord.test');
 
         $this->assertEquals($tenant->id, $this->tenantFinder->findForRequest($request)->id);
     }
 
     /** @test */
-    public function it_will_return_null_if_is_no_tenant_for_sudomain_if_requested_from_landlord_domain()
+    public function it_will_return_null_if_there_is_no_tenant_for_requested_sudomain_if_requested_from_landlord_domain()
     {
-        $request = Request::create('https://any-subdomain.landlord.domain');
+        $request = Request::create('https://any-subdomain.landlord.test');
 
         $this->assertNull($this->tenantFinder->findForRequest($request));
     }
@@ -51,6 +51,7 @@ class SubdomainTenantFinderTest extends TestCase
     public function it_will_throw_exception_if_requested_from_non_landlord_domain_with_subdomain()
     {
         $this->expectException(NotFoundHttpException::class);
+
         $request = Request::create('https://any-subdomain.non-landlord.domain');
 
         $this->assertNull($this->tenantFinder->findForRequest($request));
@@ -68,7 +69,7 @@ class SubdomainTenantFinderTest extends TestCase
 
         $this->expectException(NotFoundHttpException::class);
 
-        $request = Request::create("https://{$excludedSubdomains[0]}.landlord.domain");
+        $request = Request::create("https://{$excludedSubdomains[0]}.landlord.test");
 
         $this->tenantFinder->findForRequest($request);
     }
