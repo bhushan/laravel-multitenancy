@@ -12,7 +12,7 @@ class CreateLandLordTenantsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('subdomain')->unique();
-            $table->string('domain')->unique();
+            $table->string('domain')->unique()->nullable();
             $table->string('database')->unique();
             $table->timestamps();
         });

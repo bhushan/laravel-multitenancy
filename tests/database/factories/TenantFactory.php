@@ -9,5 +9,5 @@ $factory->define(Tenant::class, fn (Generator $faker) => [
     'name' => $faker->name,
     'subdomain' => $faker->unique()->word,
     'domain' => $faker->unique()->domainName,
-    'database' => $faker->userName,
+    'database' => $faker->unique()->word,
 ]);

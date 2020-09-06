@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Enlight\Multitenancy\TenantCollection;
 use Enlight\Multitenancy\Actions\MakeTenantCurrentAction;
 use Enlight\Multitenancy\Actions\ForgetCurrentTenantAction;
+use Enlight\Multitenancy\Models\Concerns\CreatesMySQLDatabase;
 use Enlight\Multitenancy\Models\Concerns\UsesLandlordConnection;
 
 class Tenant extends Model
 {
-    use UsesLandlordConnection;
+    use UsesLandlordConnection, CreatesMySQLDatabase;
 
     public function makeCurrent(): self
     {

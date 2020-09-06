@@ -63,6 +63,11 @@ return [
     'landlord_database_connection_name' => 'landlord',
 
     /*
+     * Creates MySQL database when new tenant is registered.
+     */
+    'create_mysql_database' => false,
+
+    /*
      * This key will be used to bind the current tenant in the container.
      */
     'current_tenant_container_key' => 'currentTenant',
